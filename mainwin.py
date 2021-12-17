@@ -168,24 +168,27 @@ class MainWin(Gtk.Window):
         self.hpane.set_position(ww-500)
 
         #self.text = Gtk.TextView()
-        self.text = SimpleEdit()
+        #self.text = SimpleEdit()
         #self.text = Gtk.Label("tttttt")
+        self.main = HtmlEdit(False)
 
         self.scroll = Gtk.ScrolledWindow()
         self.scroll2 = Gtk.ScrolledWindow()
         self.scroll3 = Gtk.ScrolledWindow()
         self.scroll4 = Gtk.ScrolledWindow()
         self.scroll5 = Gtk.ScrolledWindow()
+        self.scroll6 = Gtk.ScrolledWindow()
 
         self.scroll.add(self.tree)
-        self.scroll2.add(self.text)
+        #self.scroll2.add(self.text)
+        self.scroll2.add(self.main)
         self.scroll4.add(self.tree2)
 
         self.tabx =  Gtk.Notebook()
         self.tabx.append_page(self.scroll, Gtk.Label("Mail"))
         self.tabx.append_page(self.scroll4, Gtk.Label("Conversations"))
 
-        self.html = HtmlEdit()
+        self.html = HtmlEdit(True)
 
         self.scroll3.add(self.html)
 
@@ -198,6 +201,10 @@ class MainWin(Gtk.Window):
 
         self.tabx2.append_page(self.scroll5, Gtk.Label("Raw"))
         self.hpane.add(self.tabx2)
+
+        self.headx = SimpleEdit() #Gtk.Label("Header here")
+        self.scroll6.add(self.headx)
+        self.tabx2.append_page(self.scroll6, Gtk.Label("Header"))
 
         self.hpane.add(self.scroll3)
 
@@ -241,12 +248,11 @@ class MainWin(Gtk.Window):
         if not curr:
             return
 
-        #print("row_activate",  curr)
+        print("row_activate",  curr)
         ppp = self.model.get_path(curr)
         row = self.model[ppp]
         print(row[1], row[3], row[4], row[0])
-        self.text.set_text(str(row[:]))
-        print("position", row[7])
+        #print("position", row[7])
 
         self.cnt = 0
         re_from = regex.compile("From - ")
@@ -268,8 +274,9 @@ class MainWin(Gtk.Window):
                         continue
 
                     if accum:
-                        #self.text.set_text(accum)
-                        self.bodyx.set_text(accum)
+                        self.main.get_view().load_html(self.body(accum), None)
+                        self.headx.set_text(self.header(accum), None)
+                        self.bodyx.set_text(self.body(accum))
                     break
                     accum = aa
                     cnt += 1
@@ -403,11 +410,11 @@ class MainWin(Gtk.Window):
         self.model.append(None, ( cc[0], cc[1], dd[0], dd[1], ee[1], str(len(body)), ff[1], str(pos), "uuid"))
 
         # Make exception, looks faster
-        if self.cnt == 20:
+        if self.cnt == 30:
             usleep(10)
 
-        if self.cnt % 50 == 49:
-            usleep(10)
+        #if self.cnt % 50 == 49:
+        #    usleep(10)
 
         self.cnt += 1
         #print("acc END")
@@ -420,13 +427,12 @@ class MainWin(Gtk.Window):
         return True
 
     def load(self):
-        print("Called load")
+        #print("Called load")
         self.cnt = 0
         re_from = regex.compile("From - ")
         # Fill
         fh = open(mainfile, "rt")
         cnt = 0;  accum = ""; pos = 0
-
         while 1:
             try:
                 beg = fh.tell()
